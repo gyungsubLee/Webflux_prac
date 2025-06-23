@@ -1,13 +1,16 @@
 package webflux.prac.controller;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Schedulers;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/reactive")
 public class PracController {
@@ -28,9 +31,10 @@ public class PracController {
 
     @GetMapping("/onenine/flux")
     public Flux<Integer> produceOneToNineFlux() {
-        return Flux.create(sink -> {
+        return Flux.<Integer>create(sink -> {
             for (int i = 0; i < 9; i++) {
                 try {
+                    log.info("현재 처리하고 있는 스레드 이름: {}", Thread.currentThread().getName());
                     Thread.sleep(500);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
@@ -38,6 +42,6 @@ public class PracController {
                 sink.next(i);
             }
             sink.complete();
-        });
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 }
